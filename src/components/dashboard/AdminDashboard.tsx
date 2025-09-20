@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDashboardStats, useRecentActivities, useAIAlerts } from '../../hooks/useApi';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { 
@@ -12,64 +13,48 @@ import {
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
-  const stats = [
+  const { data: statsData, loading: statsLoading, error: statsError } = useDashboardStats();
+  const { data: activitiesData, loading: activitiesLoading } = useRecentActivities();
+  const { data: alertsData, loading: alertsLoading } = useAIAlerts();
+
+  // Transform API data to match component structure
+  const stats = statsData ? [
     {
       title: 'Total Students',
-      value: '1,234',
-      change: '+5.2%',
-      trend: 'up',
+      value: statsData.totalStudents.value.toString(),
+      change: statsData.totalStudents.change,
+      trend: statsData.totalStudents.trend,
       icon: Users,
       color: 'blue'
     },
     {
       title: 'Fees Collected',
-      value: '₹12.4L',
-      change: '+12.3%',
-      trend: 'up',
+      value: statsData.feesCollected.value,
+      change: statsData.feesCollected.change,
+      trend: statsData.feesCollected.trend,
       icon: DollarSign,
       color: 'green'
     },
     {
       title: 'Attendance Rate',
-      value: '94.2%',
-      change: '-2.1%',
-      trend: 'down',
+      value: statsData.attendanceRate.value,
+      change: statsData.attendanceRate.change,
+      trend: statsData.attendanceRate.trend,
       icon: Calendar,
       color: 'yellow'
     },
     {
       title: 'Pending Issues',
-      value: '23',
-      change: '+8',
-      trend: 'up',
+      value: statsData.pendingIssues.value.toString(),
+      change: statsData.pendingIssues.change,
+      trend: statsData.pendingIssues.trend,
       icon: AlertTriangle,
       color: 'red'
     }
-  ];
+  ] : [];
 
-  const recentActivities = [
-    { id: 1, type: 'payment', message: 'Fee payment received from John Doe', time: '2 mins ago', status: 'success' },
-    { id: 2, type: 'attendance', message: 'Low attendance alert for Grade 10-A', time: '15 mins ago', status: 'warning' },
-    { id: 3, type: 'exam', message: 'Monthly exam results published', time: '1 hour ago', status: 'info' },
-    { id: 4, type: 'admission', message: 'New admission request received', time: '2 hours ago', status: 'info' },
-  ];
-
-  const aiAlerts = [
-    {
-      id: 1,
-      title: 'Attendance Drop Alert',
-      message: 'Grade 8-B shows 15% attendance drop this week. Immediate action recommended.',
-      priority: 'high',
-      recommendations: ['Contact class teacher', 'Send parent notifications', 'Schedule class meeting']
-    },
-    {
-      id: 2,
-      title: 'Fee Collection Optimization',
-      message: 'AI suggests optimal timing for fee reminders based on payment patterns.',
-      priority: 'medium',
-      recommendations: ['Send reminders on Fridays', 'Offer early payment discounts']
-    }
-  ];
+  const recentActivities = activitiesData || [];
+  const aiAlerts = alertsData || [];
 
   const getIconColor = (color: string) => {
     const colors = {
@@ -81,6 +66,17 @@ export const AdminDashboard: React.FC = () => {
     return colors[color as keyof typeof colors];
   };
 
+  if (statsError) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Dashboard</h3>
+          <p className="text-gray-600">{statsError}</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -91,7 +87,26 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+        {statsLoading ? (
+          // Loading skeleton
+          Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} hover>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                      <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </div>
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          stats.map((stat) => (
           <Card key={stat.title} hover>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -118,7 +133,8 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -130,9 +146,26 @@ export const AdminDashboard: React.FC = () => {
                 <AlertTriangle className="w-4 h-4 text-purple-600" />
               </div>
               AI Smart Alerts
+              {alertsLoading && (
+                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin ml-2" />
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {alertsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full mb-3"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="space-y-4">
               {aiAlerts.map((alert) => (
                 <div key={alert.id} className="border border-gray-200 rounded-lg p-4">
@@ -155,15 +188,34 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Recent Activities */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Recent Activities
+              {activitiesLoading && (
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin ml-2" />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
+            {activitiesLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="flex items-start gap-3 animate-pulse">
+                    <div className="w-2 h-2 bg-gray-200 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="space-y-4">
               {recentActivities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
@@ -178,6 +230,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
       </div>

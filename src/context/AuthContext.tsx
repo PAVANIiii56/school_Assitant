@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiService } from '../services/api';
 import { User } from '../types';
 
 interface AuthContextType {
@@ -6,82 +7,69 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users for demo
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'admin@school.edu',
-    role: 'admin',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150'
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    email: 'teacher@school.edu',
-    role: 'teacher',
-    avatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=150',
-    classId: 'class1'
-  },
-  {
-    id: '3',
-    name: 'Emma Williams',
-    email: 'parent@school.edu',
-    role: 'parent',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150',
-    studentIds: ['student1']
-  },
-  {
-    id: '4',
-    name: 'Alex Rodriguez',
-    email: 'student@school.edu',
-    role: 'student',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150',
-    classId: 'class1'
-  }
-];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user
-    const storedUser = localStorage.getItem('school_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Check for stored token and get current user
+    const token = localStorage.getItem('token');
+    if (token) {
+      apiService.setToken(token);
+      getCurrentUser();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const response = await apiService.getCurrentUser();
+      if (response.success) {
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to get current user:', error);
+      // Clear invalid token
+      apiService.clearToken();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('school_user', JSON.stringify(foundUser));
-    } else {
-      throw new Error('Invalid credentials');
+
+    try {
+      const response = await apiService.login(email, password);
+      if (response.success) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const logout = () => {
+    apiService.logout().catch(console.error);
     setUser(null);
-    localStorage.removeItem('school_user');
+  };
+
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
