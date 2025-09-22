@@ -8,28 +8,43 @@ import { GraduationCap, Mail, Lock, Users, BookOpen, Star } from 'lucide-react';
 export const Login: React.FC = () => {
   const { login, loading } = useAuth();
   const [email, setEmail] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loginType, setLoginType] = useState<'email' | 'rollNumber'>('email');
 
   const demoAccounts = [
     { role: 'Admin', email: 'admin@school.edu', icon: Users, color: 'blue' },
     { role: 'Teacher', email: 'teacher@school.edu', icon: BookOpen, color: 'green' },
     { role: 'Parent', email: 'parent@school.edu', icon: Star, color: 'purple' },
-    { role: 'Student', email: 'student@school.edu', icon: GraduationCap, color: 'orange' }
+    { role: 'Student (Email)', email: 'student@school.edu', icon: GraduationCap, color: 'orange' },
+    { role: 'Student (Roll)', rollNumber: 'STU001', icon: GraduationCap, color: 'orange' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setError('');
-      await login(email, password);
+      if (loginType === 'rollNumber') {
+        await login('', password, rollNumber);
+      } else {
+        await login(email, password);
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      setError(loginType === 'rollNumber' ? 'Invalid roll number or password' : 'Invalid email or password');
     }
   };
 
-  const handleDemoLogin = (demoEmail: string) => {
-    setEmail(demoEmail);
+  const handleDemoLogin = (account: any) => {
+    if (account.email) {
+      setLoginType('email');
+      setEmail(account.email);
+      setRollNumber('');
+    } else if (account.rollNumber) {
+      setLoginType('rollNumber');
+      setRollNumber(account.rollNumber);
+      setEmail('');
+    }
     setPassword('demo123');
   };
 
@@ -106,6 +121,33 @@ export const Login: React.FC = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Login Type Toggle */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setLoginType('email')}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                      loginType === 'email'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Email Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginType('rollNumber')}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                      loginType === 'rollNumber'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Roll Number
+                  </button>
+                </div>
+
+                {loginType === 'email' ? (
                 <Input
                   type="email"
                   label="Email Address"
@@ -115,6 +157,17 @@ export const Login: React.FC = () => {
                   icon={<Mail className="w-4 h-4" />}
                   required
                 />
+                ) : (
+                <Input
+                  type="text"
+                  label="Roll Number"
+                  value={rollNumber}
+                  onChange={(e) => setRollNumber(e.target.value)}
+                  placeholder="Enter your roll number (e.g., STU001)"
+                  icon={<GraduationCap className="w-4 h-4" />}
+                  required
+                />
+                )}
                 
                 <Input
                   type="password"
@@ -155,7 +208,7 @@ export const Login: React.FC = () => {
                   {demoAccounts.map((account) => (
                     <button
                       key={account.role}
-                      onClick={() => handleDemoLogin(account.email)}
+                     onClick={() => handleDemoLogin(account)}
                       className={`p-3 border rounded-lg transition-all duration-200 ${getColorStyles(account.color)}`}
                     >
                       <div className="flex flex-col items-center gap-2">
@@ -167,7 +220,7 @@ export const Login: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-gray-500 text-center mt-4">
-                  Click any role above to login as that user (password: demo123)
+                  Click any role above to auto-fill login details (password: demo123)
                 </p>
               </div>
             </CardContent>

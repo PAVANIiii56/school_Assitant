@@ -17,7 +17,7 @@ export const StudentDashboard: React.FC = () => {
   const studentData = {
     name: 'Alex Rodriguez',
     class: 'Grade 10-A',
-    rollNumber: '2024001',
+    rollNumber: 'STU001',
     streak: 15
   };
 

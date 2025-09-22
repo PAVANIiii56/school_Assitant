@@ -45,13 +45,27 @@ const validateUserRegistration = [
 
 const validateUserLogin = [
   body('email')
+    .optional()
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
   
+  body('rollNumber')
+    .optional()
+    .isLength({ min: 1 })
+    .withMessage('Please provide a valid roll number'),
+  
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
+  
+  // Custom validation to ensure either email or rollNumber is provided
+  body().custom((value, { req }) => {
+    if (!req.body.email && !req.body.rollNumber) {
+      throw new Error('Either email or roll number is required');
+    }
+    return true;
+  }),
   
   handleValidationErrors
 ];

@@ -65,14 +65,22 @@ const register = async (req, res) => {
 // @access  Public
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rollNumber } = req.body;
 
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    // Check for user by email or roll number
+    let user;
+    if (rollNumber) {
+      // Login with roll number (for students)
+      user = await User.findOne({ rollNumber, role: 'student' }).select('+password');
+    } else {
+      // Login with email (for all roles)
+      user = await User.findOne({ email }).select('+password');
+    }
+    
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: rollNumber ? 'Invalid roll number or password' : 'Invalid email or password'
       });
     }
 
@@ -89,7 +97,7 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: rollNumber ? 'Invalid roll number or password' : 'Invalid email or password'
       });
     }
 

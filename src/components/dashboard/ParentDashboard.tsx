@@ -17,7 +17,7 @@ export const ParentDashboard: React.FC = () => {
   const childData = {
     name: 'Emily Williams',
     class: 'Grade 10-A',
-    rollNumber: '2024001',
+    rollNumber: 'STU002',
     avatar: 'https://images.pexels.com/photos/712513/pexels-photo-712513.jpeg?auto=compress&cs=tinysrgb&w=150'
   };
 

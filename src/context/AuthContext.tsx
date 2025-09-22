@@ -4,7 +4,7 @@ import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rollNumber?: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   updateUser: (userData: Partial<User>) => void;
@@ -42,11 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string, rollNumber?: string): Promise<void> => {
     setLoading(true);
 
     try {
-      const response = await apiService.login(email, password);
+      const response = await apiService.login(email, password, rollNumber);
       if (response.success) {
         setUser(response.data.user);
       }

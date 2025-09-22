@@ -48,11 +48,15 @@ class ApiService {
   }
 
   // Authentication endpoints
-  async login(email: string, password: string) {
+  async login(email: string, password: string, rollNumber?: string) {
+    const loginData = rollNumber 
+      ? { rollNumber, password }
+      : { email, password };
+      
     const response = await fetch(`${this.baseURL}/auth/login`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(loginData),
     });
 
     const data = await this.handleResponse(response);

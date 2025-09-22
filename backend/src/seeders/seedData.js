@@ -114,7 +114,7 @@ const seedDatabase = async () => {
         email: `student${i + 1}@school.edu`,
         password: 'demo123',
         role: 'student',
-        rollNumber: `2024${String(i + 1).padStart(3, '0')}`,
+        rollNumber: `STU${String(i + 1).padStart(3, '0')}`,
         classId: i < 8 ? class10A._id : class9A._id,
         dateOfBirth: moment().subtract(15 + Math.floor(Math.random() * 2), 'years').toDate(),
         isActive: true,
@@ -173,7 +173,7 @@ const seedDatabase = async () => {
       email: 'student@school.edu',
       password: 'demo123',
       role: 'student',
-      rollNumber: '2024001',
+      rollNumber: 'STU001',
       classId: class10A._id,
       dateOfBirth: moment().subtract(16, 'years').toDate(),
       isActive: true,
@@ -369,8 +369,13 @@ const seedDatabase = async () => {
     console.log('Admin: admin@school.edu / demo123');
     console.log('Teacher: teacher@school.edu / demo123');
     console.log('Parent: parent@school.edu / demo123');
-    console.log('Student: student@school.edu / demo123');
+    console.log('Student (Email): student@school.edu / demo123');
+    console.log('Student (Roll Number): STU001 / demo123');
     console.log('\nAll accounts use password: demo123');
+    console.log('\n=== Student Roll Numbers ===');
+    console.log('Main Student: STU001');
+    console.log('Other Students: STU001 to STU016');
+    console.log('All student passwords: demo123');
 
   } catch (error) {
     console.error('Error seeding database:', error);
